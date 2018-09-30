@@ -1,1 +1,1 @@
-# ia-course
+# Curso completo de IA
