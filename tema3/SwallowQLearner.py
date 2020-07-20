@@ -49,6 +49,7 @@ class SwallowQLearner(object):
             action = random.choice([a for a in range(self.action_shape)])
         else:
             action = np.argmax(self.Q(obs).data.to(torch.device('cpu')).numpy())   
+        self.step_num += 1 ##EN EL VIDEO SE NOS OLVIDÓ SUBIR EL STEP EN UNA UNIDAD
         return action
         
         
