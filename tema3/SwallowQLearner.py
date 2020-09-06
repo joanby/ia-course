@@ -84,7 +84,7 @@ class SwallowQLearner(object):
         
         td_target = reward_batch + ~done_batch * \
         np.tile(self.gamma, len(next_obs_batch)) * \
-        self.Q(next_obs_batch).detach().max(1)[0].data.numpy()
+        torch.max(self.Q(next_obs_batch).detach(),1)[0].data.tolist()
         td_target = torch.from_numpy(td_target)
         
         td_target = td_target.to(self.device)

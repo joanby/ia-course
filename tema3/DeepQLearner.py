@@ -71,9 +71,6 @@ np.random.seed(seed)
 if torch.cuda.is_available() and use_cuda:
     torch.cuda.manual_seed_all(seed)
 
-
-
-
 class DeepQLearner(object):
     def __init__(self, obs_shape, action_shape, params):
        
@@ -170,11 +167,15 @@ class DeepQLearner(object):
                 self.Q_target.load_state_dict(self.Q.state_dict())
             td_target = reward_batch + ~done_batch *\
                         np.tile(self.gamma, len(next_obs_batch)) * \
-                        self.Q_target(next_obs_batch).max(1)[0].data
+                        torch.max(self.Q_target(next_obs_batch),1)[0].data.tolist()
+            td_target = torch.from_numpy(td_target)
+
         else: 
             td_target = reward_batch + ~done_batch * \
                         np.tile(self.gamma, len(next_obs_batch)) * \
-                        self.Q(next_obs_batch).detach().max(1)[0].data
+                        torch.max(self.Q(next_obs_batch).detach(),1)[0].data.tolist()
+            td_target = torch.from_numpy(td_target)
+
         
         td_target = td_target.to(device)
         action_idx = torch.from_numpy(action_batch).to(device)
@@ -187,6 +188,8 @@ class DeepQLearner(object):
         self.Q_optimizer.step()
         
     def save(self, env_name):
+        model_save_name = 'model.pt'
+        path = F"/content/drive/My Drive/{model_save_name}" 
         file_name = self.params['save_dir']+"DQL_"+env_name+".ptm"
         agent_state = {"Q": self.Q.state_dict(),
                        "best_mean_reward": self.best_mean_reward,
@@ -196,6 +199,7 @@ class DeepQLearner(object):
         
         
     def load(self, env_name):
+        path = F"/content/drive/My Drive/trained_models/model.pt"
         file_name = self.params['load_dir']+"DQL_"+env_name+".ptm"
         agent_state = torch.load(file_name, map_location = lambda storage, loc: storage)
         self.Q.load_state_dict(agent_state["Q"])
@@ -205,7 +209,6 @@ class DeepQLearner(object):
         print("Cargado del modelo Q desde", file_name,
               "que hasta el momento tiene una mejor recompensa media de: ",self.best_mean_reward,
               " y una recompensa máxima de: ", self.best_reward)
-        
     
 if __name__ == "__main__":
     env_conf = manager.get_environment_params()
