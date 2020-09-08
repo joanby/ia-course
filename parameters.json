@@ -1,0 +1,93 @@
+{
+    "agent" : {
+        "max_training_steps": 10e5,
+        "experience_memory_size": 1e5,
+        "replay_start_size": 10000,
+        "replay_batch_size": 32, 
+        "use_target_network": true,
+        "target_network_update_frequency": 2000,
+        "learning_rate": 5e-3,
+        "gamma": 0.98,
+        "epsilon_max": 1.0,
+        "epsilon_min": 0.05,
+        "epsilon_decay_final_step": 1000000,
+        "seed": 2018,
+        "use_cuda": true,
+        "summary_filename_prefix": "logs/DQL_",
+        "load_trained_model": true,
+        "save_dir": "trained_models/",
+        "load_dir": "trained_models/",
+        "save_freq": 50
+    },
+    "environment": {
+        "type": "Atari",
+        "episodic_life": true,
+        "clip_reward": true,
+        "skip_rate": 4,
+        "num_frames_to_stack": 4,
+        "render": false,
+        "normalize_observation": false, 
+        "useful_region": {
+            "Default" : {
+                "crop1": 34,
+                "crop2": 34,
+                "dimension2": 80
+            },
+            "Asteroids": {
+                "crop1": 16,
+                "crop2": 35,
+                "dimension2": 94
+            },
+            "BeamRider": {
+                "crop1": 20,
+                "crop2": 20,
+                "dimension2": 80
+            },
+            "Boxing": {
+              "crop1": 30,
+              "crop2": 30,
+              "dimension2": 80
+            },
+            "Breakout": {
+              "crop1": 34,
+              "crop2": 34,
+              "dimension2": 80
+            },
+            "Centipede": {
+              "crop1": 36,
+              "crop2": 56,
+              "dimension2": 90
+            },
+            "MsPacman": {
+              "crop1": 2,
+              "crop2": 10,
+              "dimension2": 84
+            },
+            "Qbert": {
+              "crop1": 12,
+              "crop2": 40,
+              "dimension2": 94
+            },
+            "Pong": {
+              "crop1": 34,
+              "crop2": 34,
+              "dimension2": 80
+            },
+            "Seaquest": {
+              "crop1": 30,
+              "crop2": 30,
+              "dimension2": 80
+            },
+            "SpaceInvaders": {
+              "crop1": 8,
+              "crop2": 36,
+              "dimension2": 94
+            },
+            "VideoPinball": {
+              "crop1": 42,
+              "crop2": 60,
+              "dimension2": 89
+            }
+        }
+    }
+}

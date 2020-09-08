@@ -15,8 +15,8 @@
         "use_cuda": true,
         "summary_filename_prefix": "logs/DQL_",
         "load_trained_model": true,
-        "save_dir": "trained_models/",
-        "load_dir": "trained_models/",
+        "save_dir": "/content/drive/My Drive/",
+        "load_dir": "/content/drive/My Drive/",
         "save_freq": 50
     },
     "environment": {
