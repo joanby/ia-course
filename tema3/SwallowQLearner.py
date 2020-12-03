@@ -23,7 +23,7 @@ class SwallowQLearner(object):
         self.obs_shape = environment.observation_space.shape
         
         self.action_shape = environment.action_space.n
-        self.device = torch.device(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.Q = SLP(self.obs_shape, self.action_shape, self.device)
         self.Q_optimizer = torch.optim.Adam(self.Q.parameters(), lr = learning_rate)
         
@@ -48,7 +48,7 @@ class SwallowQLearner(object):
         if random.random() < self.epsilon_decay(self.step_num):
             action = random.choice([a for a in range(self.action_shape)])
         else:
-            action = np.argmax(self.Q(obs).data.to(self.device).numpy())   
+            action = np.argmax(self.Q(obs).data.to(self.device).cpu().numpy())
         self.step_num += 1 ##EN EL VIDEO SE NOS OLVIDÓ SUBIR EL STEP EN UNA UNIDAD
         return action
         
