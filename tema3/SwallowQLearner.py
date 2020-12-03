@@ -23,7 +23,8 @@ class SwallowQLearner(object):
         self.obs_shape = environment.observation_space.shape
         
         self.action_shape = environment.action_space.n
-        self.Q = SLP(self.obs_shape, self.action_shape)
+        self.device = torch.device("cuda")
+        self.Q = SLP(self.obs_shape, self.action_shape, self.device)
         self.Q_optimizer = torch.optim.Adam(self.Q.parameters(), lr = learning_rate)
         
         self.gamma = gamma
@@ -37,7 +38,6 @@ class SwallowQLearner(object):
         self.policy = self.epsilon_greedy_Q
         
         self.memory = ExperienceMemory(capacity = int(1e5))
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         
          
@@ -48,7 +48,7 @@ class SwallowQLearner(object):
         if random.random() < self.epsilon_decay(self.step_num):
             action = random.choice([a for a in range(self.action_shape)])
         else:
-            action = np.argmax(self.Q(obs).data.to(torch.device(self.device)).numpy())   
+            action = np.argmax(self.Q(obs).data.to(self.device).numpy())   
         self.step_num += 1 ##EN EL VIDEO SE NOS OLVIDÓ SUBIR EL STEP EN UNA UNIDAD
         return action
         
@@ -82,11 +82,16 @@ class SwallowQLearner(object):
         next_obs_batch = np.array(batch_xp.next_obs)
         done_batch = np.array(batch_xp.done)
         
-        td_target = reward_batch + ~done_batch * \
-        np.tile(self.gamma, len(next_obs_batch)) * \
-        torch.max(self.Q(next_obs_batch).detach(),1)[0].data.tolist()
+        if str(self.device) == "cuda" :
+            td_target =  reward_batch + ~done_batch * \
+                np.tile(self.gamma, len(next_obs_batch)) * \
+                    torch.max(self.Q(next_obs_batch).detach(),1)[0].data.tolist()
+        else:
+            td_target = reward_batch + ~done_batch * \
+                np.tile(self.gamma, len(next_obs_batch)) * \
+                    self.Q(next_obs_batch).detach().max(1)[0].data.numpy()
+                    
         td_target = torch.from_numpy(td_target)
-        
         td_target = td_target.to(self.device)
         action_idx = torch.from_numpy(action_batch).to(self.device)
         td_error = torch.nn.functional.mse_loss(
