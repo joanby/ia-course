@@ -9,16 +9,7 @@ Created on Tue Oct 16 19:01:47 2018
 import torch
 
 class CNN(torch.nn.Module):
-    """
-    Una red neuronal convolucional que tomará decisiones según los píxeles de la imagen
-    """
     def __init__(self, input_shape, output_shape, device):
-        """
-        :param input_shape: Dimensión de la imagen, que supondremos viene reescalada a Cx84x84
-        :param output_shape: Dimensión de la salida
-        :param device: El dispositivo (CPU o CUDA) donde la CNN debe almacenar los valores a cada iteración
-        """
-        #input_shape Cx84x84
         super(CNN, self).__init__()
         self.device = device
         
