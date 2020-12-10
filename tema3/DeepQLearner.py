@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Oct 18 10:00:35 2018
-
+Nota importante: Para modificar la carpeta donde se guarda el modelo debes ir a parameters.json por defecto esta en trained_models
 @author: juangabriel
 """
 import torch
@@ -36,8 +36,8 @@ args.add_argument("--test", help = "Modo de testing para jugar sin aprender. Por
                   action = "store_true", default = False)
 args.add_argument("--render", help = "Renderiza el entorno en pantalla. Desactivado por defecto", action="store_true", default=False)
 args.add_argument("--record", help = "Almacena videos y estados de la performance del agente", action="store_true", default=False)
-args.add_argument("--output-dir", help = "Directorio para almacenar los outputs. Por defecto = ./trained_models/results",
-                  default = "./trained_models/results")
+args.add_argument("--output-dir", help = "Directorio para almacenar los outputs. Por defecto = ./trained_models",
+                  default = "./trained_models")
 args = args.parse_args()
 
 
@@ -162,25 +162,33 @@ class DeepQLearner(object):
         done_batch = np.array(batch_xp.done)
         
         
-        if self.params['use_target_network']:
-            if self.step_num % self.params['target_network_update_frequency'] == 0:
-                self.Q_target.load_state_dict(self.Q.state_dict())
-            td_target = reward_batch + ~done_batch *\
-                        np.tile(self.gamma, len(next_obs_batch)) * \
-                        torch.max(self.Q_target(next_obs_batch),1)[0].data.tolist()
-            td_target = torch.from_numpy(td_target)
-
-        else: 
-            td_target = reward_batch + ~done_batch * \
-                        np.tile(self.gamma, len(next_obs_batch)) * \
+        if torch.cuda.is_available() :
+            if self.params['use_target_network']:
+                td_target =  reward_batch + ~done_batch * \
+                    np.tile(self.gamma, len(next_obs_batch)) * \
+                        torch.max(self.Q_target(next_obs_batch).detach(),1)[0].data.tolist()
+            else:
+                td_target =  reward_batch + ~done_batch * \
+                    np.tile(self.gamma, len(next_obs_batch)) * \
                         torch.max(self.Q(next_obs_batch).detach(),1)[0].data.tolist()
-            td_target = torch.from_numpy(td_target)
+        else:
+            if self.params['use_target_network']:
+                if self.step_num % self.params['target_network_update_frequency'] == 0:
+                    self.Q_target.load_state_dict(self.Q.state_dict())
+                    td_target = reward_batch + ~done_batch *\
+                        np.tile(self.gamma, len(next_obs_batch)) * \
+                            self.Q_target(next_obs_batch).max(1)[0].data
+                else: 
+                    td_target = reward_batch + ~done_batch * \
+                        np.tile(self.gamma, len(next_obs_batch)) * \
+                            self.Q(next_obs_batch).detach().max(1)[0].data
 
         
+        td_target = torch.from_numpy(td_target)
         td_target = td_target.to(device)
         action_idx = torch.from_numpy(action_batch).to(device)
         td_error = torch.nn.functional.mse_loss(
-                self.Q(obs_batch).gather(1, action_idx.view(-1,1)),
+                self.Q(obs_batch).gather(1,action_idx.view(-1,1).long()),
                 td_target.float().unsqueeze(1))
         
         self.Q_optimizer.zero_grad()
@@ -188,8 +196,6 @@ class DeepQLearner(object):
         self.Q_optimizer.step()
         
     def save(self, env_name):
-        model_save_name = 'model.pt'
-        path = F"/content/drive/My Drive/{model_save_name}" 
         file_name = self.params['save_dir']+"DQL_"+env_name+".ptm"
         agent_state = {"Q": self.Q.state_dict(),
                        "best_mean_reward": self.best_mean_reward,
@@ -199,7 +205,6 @@ class DeepQLearner(object):
         
         
     def load(self, env_name):
-        path = F"/content/drive/My Drive/trained_models/model.pt"
         file_name = self.params['load_dir']+"DQL_"+env_name+".ptm"
         agent_state = torch.load(file_name, map_location = lambda storage, loc: storage)
         self.Q.load_state_dict(agent_state["Q"])
@@ -209,6 +214,7 @@ class DeepQLearner(object):
         print("Cargado del modelo Q desde", file_name,
               "que hasta el momento tiene una mejor recompensa media de: ",self.best_mean_reward,
               " y una recompensa máxima de: ", self.best_reward)
+        
     
 if __name__ == "__main__":
     env_conf = manager.get_environment_params()

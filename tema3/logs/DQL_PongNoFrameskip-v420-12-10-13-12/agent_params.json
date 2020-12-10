@@ -1,0 +1,20 @@
+{
+    "epsilon_decay_final_step":1000000,
+    "epsilon_max":1.0,
+    "epsilon_min":0.05,
+    "experience_memory_size":100000.0,
+    "gamma":0.98,
+    "learning_rate":0.005,
+    "load_dir":"trained_models/",
+    "load_trained_model":true,
+    "max_training_steps":1000000.0,
+    "replay_batch_size":32,
+    "replay_start_size":10000,
+    "save_dir":"trained_models/",
+    "save_freq":50,
+    "seed":2018,
+    "summary_filename_prefix":"logs/DQL_",
+    "target_network_update_frequency":2000,
+    "use_cuda":true,
+    "use_target_network":true
+}
