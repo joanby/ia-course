@@ -1,0 +1,23 @@
+# Core RL library (Gymnasium es el fork mantenido de OpenAI Gym tras v0.26).
+# El curso original usaba `gym` v0.21; ver MIGRATION.md para los cambios de API.
+gymnasium[box2d,atari,classic-control,other]>=1.0.0
+ale-py>=0.10.0           # Backend ROMs Atari (sustituye al antiguo `atari_py`).
+shimmy>=2.0              # Adaptadores de compatibilidad para entornos gym v0.21/v0.26 antiguos.
+moviepy>=1.0             # Backend de RecordVideo (escribir mp4 desde frames RGB).
+
+# Entornos opcionales del curso de robótica (tema4/tema5 si quieres FetchReach, etc.):
+# gymnasium-robotics>=1.3
+
+# Aprendizaje profundo
+torch>=2.2
+torchvision>=0.17
+
+# Utilidades de los temas 3 y 5
+numpy>=1.26
+opencv-python>=4.9
+tensorboardX>=2.6
+tqdm>=4.66
+
+# Visualización en notebooks (Google Colab y entornos sin pantalla)
+pyvirtualdisplay>=3.0
+matplotlib>=3.8

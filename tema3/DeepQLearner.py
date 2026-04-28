@@ -5,25 +5,31 @@ Created on Thu Oct 18 10:00:35 2018
 
 @author: juangabriel
 """
-import torch
 import random
-import gym
-import numpy as np
-
-from datetime import datetime
 from argparse import ArgumentParser
+from datetime import datetime
 
-from libs.perceptron import SLP
-from libs.cnn import CNN
-
-from utils.decay_schedule import LinearDecaySchedule
-from utils.experience_memory import ExperienceMemory, Experience
-from utils.params_manager import ParamsManager
+import gymnasium as gym
+import numpy as np
+import torch
+from tensorboardX import SummaryWriter
 
 import environments.atari as Atari
 import environments.utils as env_utils
+from libs.cnn import CNN
+from libs.perceptron import SLP
+from utils.decay_schedule import LinearDecaySchedule
+from utils.experience_memory import Experience, ExperienceMemory
+from utils.params_manager import ParamsManager
 
-from tensorboardX import SummaryWriter
+# Registramos los entornos ALE/* (Atari) en el namespace de Gymnasium si
+# ale-py está instalado (sustituye al antiguo ``atari_py``).
+try:
+    import ale_py
+
+    gym.register_envs(ale_py)
+except ImportError:
+    pass
 
 ## Parseador de Argumentos
 args = ArgumentParser("DeepQLearning")
@@ -258,24 +264,25 @@ if __name__ == "__main__":
     
     episode = 0
     while global_step_num < agent_params['max_training_steps']:
-        obs = environment.reset()
+        obs, info = environment.reset()
         total_reward = 0.0
-        done = False
+        terminated, truncated, done = False, False, False
         step = 0
-        while not done: 
+        while not done:
             if env_conf['render'] or args.render:
                 environment.render()
-            
+
             action = agent.get_action(obs)
-            next_obs, reward, done, info = environment.step(action)
+            next_obs, reward, terminated, truncated, info = environment.step(action)
+            done = terminated or truncated
             agent.memory.store(Experience(obs, action, reward, next_obs, done))
-            
+
             obs = next_obs
             total_reward += reward
             step += 1
             global_step_num += 1
-            
-            if done is True:
+
+            if done:
                 episode += 1
                 episode_rewards.append(total_reward)
             
