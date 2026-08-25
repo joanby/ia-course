@@ -5,7 +5,7 @@ Spyder Editor
 This is a temporary script file.
 """
 
-import gym # cargamos la librería de OpenAI Gym
+import gymnasium as gym # cargamos la librería de OpenAI Gym
 
 environment = gym.make("MountainCar-v0") # Lanzamos una instancia del videojuego de la Montaña rusa
 environment.reset() # Limpiamos y preparamos el entorno para tomar decisiones

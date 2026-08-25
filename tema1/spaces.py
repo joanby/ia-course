@@ -6,8 +6,9 @@ Created on Tue Oct  2 13:15:19 2018
 @author: juangabriel
 """
 
-import gym
-from gym.spaces import *
+import gymnasium as gym
+import ale_py
+from gymnasium.spaces import *
 import sys
 
 # Box -> R^n (x1,x2,x3,...,xn), xi [low, high]

@@ -11,7 +11,7 @@ import numpy as np
 from libs.perceptron import SLP
 from utils.decay_schedule import LinearDecaySchedule
 import random
-import gym
+import gymnasium as gym
 from utils.experience_memory import ExperienceMemory, Experience
 
 MAX_NUM_EPISODES = 100000
@@ -109,12 +109,13 @@ if __name__ == "__main__":
     first_episode = True
     episode_rewards = list()
     for episode in range(MAX_NUM_EPISODES):
-        obs = environment.reset()
+        obs, info = environment.reset()
         total_reward = 0.0
         for step in range(STEPS_PER_EPISODE):
             #environment.render()
             action = agent.get_action(obs)
-            next_obs, reward, done, info = environment.step(action)
+            next_obs, reward, terminated, truncated, info = environment.step(action)
+            done = terminated or truncated
             agent.memory.store(Experience(obs, action, reward, next_obs, done))
             agent.learn(obs, action, reward, next_obs)
             

@@ -6,7 +6,7 @@ Created on Thu Oct 11 10:27:43 2018
 @author: juangabriel
 """
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 
@@ -72,11 +72,12 @@ def train(agent, environment):
     best_reward = -float('inf')
     for episode in range(MAX_NUM_EPISODES):
         done = False
-        obs = environment.reset()
+        obs, info = environment.reset()
         total_reward = 0.0
         while not done:
             action = agent.get_action(obs)# Acción elegida según la ecuación de Q-LEarning
-            next_obs, reward, done, info = environment.step(action)
+            next_obs, reward, terminated, truncated, info = environment.step(action)
+            done = terminated or truncated
             agent.learn(obs, action, reward, next_obs)
             obs = next_obs
             total_reward += reward
@@ -90,11 +91,12 @@ def train(agent, environment):
         
 def test(agent, environment, policy):
     done = False
-    obs = environment.reset()
+    obs, info = environment.reset()
     total_reward = 0.0
     while not done:
         action = policy[agent.discretize(obs)] #acción que dictamina la política que hemos entrenado
-        next_obs, reward, done, info = environment.step(action)
+        next_obs, reward, terminated, truncated, info = environment.step(action)
+        done = terminated or truncated
         obs = next_obs
         total_reward += reward
     return total_reward
@@ -104,7 +106,11 @@ if __name__ == "__main__":
     agent = QLearner(environment)
     learned_policy = train(agent, environment)
     monitor_path = "./monitor_output"
-    environment = gym.wrappers.Monitor(environment, monitor_path, force = True)
+    # gym.wrappers.Monitor ya no existe en gymnasium; su sustituta es RecordVideo,
+    # que exige que el entorno se haya creado con render_mode="rgb_array" (Monitor
+    # no lo pedía). Recreamos el entorno con ese render_mode antes de envolverlo.
+    environment = gym.make("MountainCar-v0", render_mode="rgb_array")
+    environment = gym.wrappers.RecordVideo(environment, monitor_path)
     for _ in range(1000):
         test(agent, environment, learned_policy)
     environment.close()

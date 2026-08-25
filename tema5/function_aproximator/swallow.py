@@ -129,7 +129,7 @@ class SwallowActorCritic(torch.nn.Module):
         :param x: observación
         :return: logits según la política del agente
         """
-        x.require_grad_()
+        x.requires_grad_()
         x = x.to(self.device)
         x = self.layer1(x)
         x = self.layer2(x)

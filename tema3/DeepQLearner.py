@@ -7,11 +7,16 @@ Created on Thu Oct 18 10:00:35 2018
 """
 import torch
 import random
-import gym
+import gymnasium as gym
 import numpy as np
+import os
 
 from datetime import datetime
 from argparse import ArgumentParser
+
+# Carpeta del propio fichero: los checkpoints entrenados viven en trained_models/
+# junto a este script, no en el Google Drive de la sesión de Colab original.
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 from libs.perceptron import SLP
 from libs.cnn import CNN
@@ -29,8 +34,8 @@ from tensorboardX import SummaryWriter
 args = ArgumentParser("DeepQLearning")
 args.add_argument("--params-file", help = "Path del fichero JSON de parámetros. El valor por defecto es parameters.json",
                   default="parameters.json", metavar = "PFILE")
-args.add_argument("--env", help = "Entorno de ID de Atari disponible en OpenAI Gym. El valor por defecto será SeaquestNoFrameskip-v4",
-                  default = "SeaquestNoFrameskip-v4", metavar="ENV")
+args.add_argument("--env", help = "Entorno de ID de Atari disponible en OpenAI Gym. El valor por defecto es Seaquest-v0 (tiene checkpoint entrenado en trained_models/)",
+                  default = "Seaquest-v0", metavar="ENV")
 args.add_argument("--gpu-id", help = "ID de la GPU a utilizar, por defecto 0", default = 0, type = int, metavar = "GPU_ID")
 args.add_argument("--test", help = "Modo de testing para jugar sin aprender. Por defecto está desactivado", 
                   action = "store_true", default = False)
@@ -188,9 +193,7 @@ class DeepQLearner(object):
         self.Q_optimizer.step()
         
     def save(self, env_name):
-        model_save_name = 'model.pt'
-        path = F"/content/drive/My Drive/{model_save_name}" 
-        file_name = self.params['save_dir']+"DQL_"+env_name+".ptm"
+        file_name = os.path.join(THIS_DIR, self.params['save_dir'], "DQL_"+env_name+".ptm")
         agent_state = {"Q": self.Q.state_dict(),
                        "best_mean_reward": self.best_mean_reward,
                        "best_reward": self.best_reward}
@@ -199,9 +202,11 @@ class DeepQLearner(object):
         
         
     def load(self, env_name):
-        path = F"/content/drive/My Drive/trained_models/model.pt"
-        file_name = self.params['load_dir']+"DQL_"+env_name+".ptm"
-        agent_state = torch.load(file_name, map_location = lambda storage, loc: storage)
+        file_name = os.path.join(THIS_DIR, self.params['load_dir'], "DQL_"+env_name+".ptm")
+        # weights_only=False: desde PyTorch 2.6 es el valor por defecto y estos
+        # checkpoints de 2018 no pasan la carga restringida (contienen escalares
+        # de numpy). Se confía en el fichero: viene del propio repo del curso.
+        agent_state = torch.load(file_name, map_location = lambda storage, loc: storage, weights_only=False)
         self.Q.load_state_dict(agent_state["Q"])
         self.Q.to(device)
         self.best_mean_reward = agent_state["best_mean_reward"]
@@ -258,16 +263,17 @@ if __name__ == "__main__":
     
     episode = 0
     while global_step_num < agent_params['max_training_steps']:
-        obs = environment.reset()
+        obs, info = environment.reset()
         total_reward = 0.0
         done = False
         step = 0
-        while not done: 
+        while not done:
             if env_conf['render'] or args.render:
                 environment.render()
-            
+
             action = agent.get_action(obs)
-            next_obs, reward, done, info = environment.step(action)
+            next_obs, reward, terminated, truncated, info = environment.step(action)
+            done = terminated or truncated
             agent.memory.store(Experience(obs, action, reward, next_obs, done))
             
             obs = next_obs

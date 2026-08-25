@@ -21,7 +21,7 @@ from function_aproximator.deep import DeepDiscreteActor
 from function_aproximator.deep import DeepCritic
 
 
-import gym
+import gymnasium as gym
 import numpy as np
 from collections import namedtuple
 
@@ -39,8 +39,8 @@ from tensorboardX import SummaryWriter
 args = ArgumentParser("DeepActorCriticAgent")
 args.add_argument("--params-file", help = "Path del fichero JSON de parámetros. El valor por defecto es parameters.json",
                   default="parameters.json", metavar = "PFILE")
-args.add_argument("--env", help = "Entorno de ID de Atari disponible en OpenAI Gym. El valor por defecto será SeaquestNoFrameskip-v4",
-                  default = "SeaquestNoFrameskip-v4", metavar="ENV")
+args.add_argument("--env", help = "Entorno de ID de Atari disponible en OpenAI Gym. El valor por defecto es Pendulum-v1 (tiene checkpoint entrenado en trained_models/)",
+                  default = "Pendulum-v1", metavar="ENV")
 args.add_argument("--gpu-id", help = "ID de la GPU a utilizar, por defecto 0", default = 0, type = int, metavar = "GPU_ID")
 args.add_argument("--test", help = "Modo de testing para jugar sin aprender. Por defecto está desactivado", 
                   action = "store_true", default = False)
@@ -269,7 +269,10 @@ class DeepActorCriticAgent(mp.Process):
         
     def load(self):
         file_name = self.params['model_dir']+"A2C_"+self.env_name+".ptm"
-        agent_state = torch.load(file_name, map_location = lambda storage, loc: storage)
+        # weights_only=False: desde PyTorch 2.6 es el valor por defecto y estos
+        # checkpoints de 2018 no pasan la carga restringida (contienen escalares
+        # de numpy). Se confía en el fichero: viene del propio repo del curso.
+        agent_state = torch.load(file_name, map_location = lambda storage, loc: storage, weights_only=False)
         self.actor.load_state_dict(agent_state["Actor"])
         self.critic.load_state_dict(agent_state["Critic"])
         self.actor.to(device)
@@ -310,7 +313,9 @@ class DeepActorCriticAgent(mp.Process):
         ## Configurar la política y parámetros del actor y del crítico
         self.state_shape = self.env.observation_space.shape
         
-        if isinstance(self.env.action_space.sample(), int): # Espacio de acciones Discreto
+        # gymnasium: action_space.sample() de un Discrete ya no es un int de Python
+        # (es numpy.int64), así que hay que mirar el tipo del espacio, no de la muestra.
+        if isinstance(self.env.action_space, gym.spaces.Discrete): # Espacio de acciones Discreto
             self.action_shape = self.env.action_space.n
             self.policy = self.discrete_policy
             self.continuous_action_space = False
@@ -355,13 +360,14 @@ class DeepActorCriticAgent(mp.Process):
                     print("WARNING: no hay ningun modelo para este entorno. Pulsa cualquier tecla para volver a empezar...")
                     
         for episode in range(self.params["max_num_episodes"]):
-            obs = self.env.reset()
+            obs, info = self.env.reset()
             done = False
             ep_reward = 0.0
             step_num = 0
             while not done:
                 action = self.get_action(obs)
-                next_obs, reward, done, _ = self.env.step(action)
+                next_obs, reward, terminated, truncated, info = self.env.step(action)
+                done = terminated or truncated
                 self.rewards.append(reward)
                 ep_reward += reward
                 step_num += 1
@@ -409,7 +415,11 @@ if __name__ == "__main__":
     env_params = manager.get_environment_params()
     env_params["env_name"] = args.env
     
-    mp.set_start_method("spawn")
+    # force=True: tensorboardX ya deja fijado el método de arranque al construir
+    # el SummaryWriter (arriba), algo que no hacía en 2018; sin force, esta
+    # llamada revienta con "context has already been set" aunque pida el mismo
+    # valor ("spawn") que ya está activo.
+    mp.set_start_method("spawn", force=True)
 
     agent_procs = [DeepActorCriticAgent(id, args.env, agent_params, env_params) for id in range(agent_params["num_agents"])]    
     

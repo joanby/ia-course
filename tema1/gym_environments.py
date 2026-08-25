@@ -6,9 +6,9 @@ Created on Sun Sep 30 11:41:15 2018
 @author: juangabriel
 """
 
-from gym import envs
+from gymnasium import envs
 
-env_names = [env.id for env in envs.registry.all()]
+env_names = [env.id for env in envs.registry.values()]
 
 for name in sorted(env_names):
     print(name)

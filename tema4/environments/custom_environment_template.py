@@ -6,7 +6,7 @@ Created on Mon Oct 29 15:11:49 2018
 @author: juangabriel
 """
 
-import gym
+import gymnasium as gym
 
 class CustomEnvironment(gym.Env):
     """

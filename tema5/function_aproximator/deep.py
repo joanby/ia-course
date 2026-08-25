@@ -39,7 +39,7 @@ class DeepActor(torch.nn.Module):
         :param x: observación
         :return: Media (mu) y Desviación Estándar (sigma) para una política gaussiana
         """
-        x.require_grad_()
+        x.requires_grad_()
         x = x.to(self.device)
         x = self.layer1(x)
         x = self.layer2(x)
@@ -80,7 +80,7 @@ class DeepDiscreteActor(torch.nn.Module):
         :param x: observación
         :return: logits según la política del agente
         """
-        x.require_grad_()
+        x.requires_grad_()
         x = x.to(self.device)
         x = self.layer1(x)
         x = self.layer2(x)
@@ -119,7 +119,7 @@ class DeepCritic(torch.nn.Module):
         :param x: observación
         :return: logits según la política del agente
         """
-        x.require_grad_()
+        x.requires_grad_()
         x = x.to(self.device)
         x = self.layer1(x)
         x = self.layer2(x)
@@ -160,7 +160,7 @@ class DeepActorCritic(torch.nn.Module):
         :param x: observación
         :return: logits según la política del agente
         """
-        x.require_grad_()
+        x.requires_grad_()
         x = x.to(self.device)
         x = self.layer1(x)
         x = self.layer2(x)

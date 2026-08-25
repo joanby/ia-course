@@ -6,7 +6,8 @@ Created on Sun Sep 30 18:06:32 2018
 @author: juangabriel
 """
 
-import gym
+import gymnasium as gym
+import ale_py
 import sys
 
 def run_gym_environment(argv):

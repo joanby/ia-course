@@ -6,7 +6,7 @@ Created on Thu Oct 18 15:51:17 2018
 @author: juangabriel
 """
 
-import gym
+import gymnasium as gym
 import cv2
 import numpy as np
 

@@ -6,19 +6,20 @@ Created on Tue Oct  2 16:38:26 2018
 @author: juangabriel
 """
 
-import gym
+import gymnasium as gym
 environment = gym.make("MountainCar-v0")
 MAX_NUM_EPISODES = 1000
 
 for episode in range(MAX_NUM_EPISODES):
     done = False
-    obs = environment.reset()
+    obs, info = environment.reset()
     total_reward = 0.0 ## Variable para guardar la recompensa total obtenida en cada episodio
     step = 0
     while not done:
         environment.render()
         action = environment.action_space.sample()## Acción aleatoria, que posteriormente reemplazaremos por la decisión de nuestro agente inteligente
-        next_state, reward, done, info = environment.step(action)
+        next_state, reward, terminated, truncated, info = environment.step(action)
+        done = terminated or truncated
         total_reward += reward
         step += 1
         obs = next_state
