@@ -19,7 +19,7 @@ def get_games_list():
 
 
 def make_env(env_id, env_conf):
-    env = gym.make(env_id)
+    env = gym.make(env_id, render_mode = "human" if env_conf['render'] else None)
     if 'NoFrameskip' in env_id:
         assert 'NoFrameskip' in env.spec.id
         env = NoopResetEnv(env, noop_max = 30)

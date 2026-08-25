@@ -304,10 +304,11 @@ class DeepActorCriticAgent(mp.Process):
             if game.replace("_", "") in args.env.lower():
                 atari_env = True
                 
+        self.env_conf["render"] = self.env_conf["render"] or args.render
         if atari_env:
             self.env = Atari.make_env(self.env_name, self.env_conf)
         else: 
-            self.env = gym.make(self.env_name)
+            self.env = gym.make(self.env_name, render_mode = "human" if self.env_conf["render"] else None)
         
         
         ## Configurar la política y parámetros del actor y del crítico

@@ -238,10 +238,11 @@ if __name__ == "__main__":
         if game.replace("_", "") in args.env.lower():
             atari_env = True
     
+    env_conf["render"] = env_conf["render"] or args.render
     if atari_env:
         environment = Atari.make_env(args.env, env_conf)
     else:
-        environment = env_utils.ResizeReshapeFrames(gym.make(args.env))
+        environment = env_utils.ResizeReshapeFrames(gym.make(args.env, render_mode = "human" if env_conf["render"] else None))
         
     obs_shape = environment.observation_space.shape
     action_shape = environment.action_space.n
