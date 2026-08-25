@@ -3,7 +3,8 @@
 Este documento explica qué se ha tocado en el código del *Curso Completo de
 Inteligencia Artificial con Python* para que vuelva a ejecutarse en 2026, y
 por qué. No es un diff: es la explicación de qué decidió cada librería entre
-2019 (cuando se grabó el curso) y ahora, y qué se ha hecho al respecto.
+2018-2019 —el código del curso entra en el repositorio entre septiembre y
+noviembre de 2018— y ahora, y qué se ha hecho al respecto.
 
 Todo lo que hay en esta rama son las mismas clases del vídeo. La mayor parte
 de lo que sigue cambia **cómo se le pide algo a una librería**, no lo que
@@ -11,10 +12,14 @@ obtienes.
 
 Hay, eso sí, una segunda mitad de este documento que no habla de librerías.
 Habla de cosas que se rompieron solas dentro del propio repositorio: rutas
-que apuntaban al Google Drive de una sesión de Colab de 2019, un fichero
-duplicado esperando a desfasarse, y un typo de una letra que llevaba seis
-años matando un proceso sin que nadie pudiera verlo. Esa parte es la que más
-enseña, y por eso se cuenta con el mismo detalle que la otra.
+que apuntaban al Google Drive de una sesión de Colab de 2020, un fichero
+duplicado esperando a desfasarse, y un typo de una letra que llevaba casi
+ocho años matando un proceso sin que nadie pudiera verlo. Esa parte es la
+que más enseña, y por eso se cuenta con el mismo detalle que la otra.
+
+Un apunte sobre las fechas y los nombres que vas a leer aquí: no salen de
+la memoria de nadie, salen del `git log` de este mismo repositorio, commit
+a commit. Es información pública y la puedes comprobar tú.
 
 ## Versiones con las que se ha verificado
 
@@ -51,7 +56,9 @@ cual, para bien o para mal.
 
 ## 1. `gym` se quedó sin mantenimiento y su heredero es `gymnasium`
 
-**Afecta a 25 de los 37 ficheros del curso** (16 `.py` + los 9 notebooks).
+**Afecta a 25 de los 36 ficheros del curso que quedan en esta rama** (16
+`.py` + los 9 notebooks). En `master` son 37: esta rama retira
+`params_manager_colab.py`, un duplicado byte a byte (punto 11).
 Es, con diferencia, el cambio central de esta actualización: todo lo demás
 que hay en este documento es más pequeño o más local.
 
@@ -218,11 +225,14 @@ dos paquetes que `Monitor` no necesitaba:
   `render_mode="rgb_array"` —que no abre ninguna ventana— pasa por pygame
   para pintar. No es solo cosa del modo `"human"`.
 
-Las dos están en `iacourse.yml`, así que no tienes que hacer nada.
+Las dos las tienes con solo crear el entorno del `.yml`, aunque llegan por
+caminos distintos: `moviepy` es una línea propia de `iacourse.yml`, y
+`pygame-ce` no hace falta pedirlo porque lo arrastra el extra
+`classic-control` de `gymnasium[box2d,classic-control]`.
 
 **Comprobado que graba de verdad, no solo que la llamada no falla.** Tras la
 ejecución completa (50.000 episodios de entrenamiento más 1.000 de prueba,
-152 segundos), los 10 `.mp4` generados en `monitor_output/` se leyeron con
+unos dos minutos), los 10 `.mp4` generados en `monitor_output/` se leyeron con
 `ffprobe`: todos entre 27 y 36 KB, con duración real de entre 3,7 y 4,8
 segundos. Ficheros de vídeo válidos, no ficheros vacíos con la extensión
 correcta. Los de la prueba se borraron después; no forman parte del repo.
@@ -235,7 +245,9 @@ físicas **Box2D**, que hay que instalar aparte. Con `gym` no hacía falta.
 
 Se instala con `pip install "gymnasium[box2d]"`, que resuelve a
 `box2d==2.3.10` y `swig==4.5.0`, ambos con rueda precompilada para
-macOS/arm64 — no hay que compilar nada. Ya está incluido en `iacourse.yml`.
+macOS/arm64 — no hay que compilar nada. Ya está incluido en `iacourse.yml`,
+que pide `gymnasium[box2d,classic-control]`: Box2D llega por ese extra, no
+como una línea suelta del `.yml`.
 
 Solo hace falta si quieres usar `LunarLander-v3`. El resto del curso,
 incluido el entorno que tema5 usa por defecto (`Pendulum-v1`), funciona sin
@@ -311,9 +323,25 @@ puedas ver a un agente jugar sin tener que entrenarlo tú.
 ```
 
 Eso es una carpeta de Google Drive montada dentro de una sesión de Google
-Colab. Existió durante unas horas de 2019, en la máquina virtual de quien
-grabó la clase, y no ha vuelto a existir desde entonces en ningún ordenador
-del mundo. Mientras tanto, los `.ptm` estaban ahí al lado, en el repositorio.
+Colab. Existió durante unas horas y no ha vuelto a existir desde entonces en
+ningún ordenador del mundo. Mientras tanto, los `.ptm` estaban ahí al lado,
+en el repositorio.
+
+**Y no siempre estuvo así**, que es la parte que conviene contar bien. El
+`git log` es concreto:
+
+| Cuándo | Quién | `save_dir` / `load_dir` |
+|---|---|---|
+| 26-10-2018 (`815fe64`) | Juan Gabriel | `trained_models/` — correcto |
+| 06-09-2020 (`8ffd29a`) | contribuidor externo | `/content/trained_models/` |
+| 06-09-2020 (`ac68e0a`) | contribuidor externo | `/content/drive/My Drive/trained_models/` |
+| 06-09-2020 (`30dee87`) | contribuidor externo | `/content/drive/My Drive/` |
+
+Los tres commits de 2020 llegaron el mismo día, dentro del *pull request*
+#2, de alguien de fuera que estaba adaptando el curso a Google Colab y a
+quien esa ruta le funcionaba —en Colab—. Así que la ruta no es de 2019, ni
+la escribió quien grabó la clase: es de **septiembre de 2020**, y lleva
+rota desde entonces casi seis años.
 
 **Y ahora la parte que lo convierte en un problema serio.** La carga del
 modelo vive dentro de un `try/except FileNotFoundError`. Así que no había
@@ -337,8 +365,16 @@ salida ve un fichero verde. Hay que leer lo que imprime.
 la carpeta que existe de verdad, y `DeepQLearner.py` resuelve esa ruta
 relativa al propio fichero (`os.path.dirname(os.path.abspath(__file__))`) en
 vez de al directorio desde el que lo lances — así funciona igual si ejecutas
-`python DeepQLearner.py` desde `tema3/` o desde cualquier otro sitio. Se
-retiraron además dos variables `path = F"/content/drive/..."` que se
+`python DeepQLearner.py` desde `tema3/` o desde cualquier otro sitio.
+
+Conviene acotar esa frase, porque promete menos de lo que parece: **lo
+único que se ha hecho relativo al fichero es el checkpoint.** El
+`--params-file` (que por defecto vale `parameters.json`) y la carpeta
+`logs/` donde escribe TensorBoard siguen siendo relativos al directorio
+desde el que lanzas el comando. Lo cómodo, por tanto, sigue siendo
+ejecutar desde dentro de `tema3/`.
+
+Se retiraron además dos variables `path = F"/content/drive/..."` que se
 calculaban y no se usaban: restos muertos de aquella sesión de Colab.
 
 `tema5/parameters.json` no tenía este problema: su ruta ya era relativa.
@@ -379,6 +415,29 @@ del punto anterior. Se ha cambiado el valor por defecto en los dos:
 **Verificado ejecutando los dos sin ningún argumento**: ambos cargan ahora
 un checkpoint real e imprimen su recompensa registrada antes de ponerse a
 jugar, en vez de arrancar un entrenamiento desde cero.
+
+**Y ahora el efecto de segundo orden, que casi se cuela.** Cambiar el valor
+por defecto de `--env` arregló la carga del checkpoint y, de paso, rompió
+la bandera con la que se ve jugar al agente:
+
+```
+$ python DeepQLearner.py --render
+gymnasium.error.Error: Invalid render mode `None`. Supported modes: `human`, `rgb_array`.
+```
+
+El motivo es el del apartado de "lo que puede verse distinto": con Atari,
+`.render()` sin modo no avisa, revienta. Antes no se notaba porque el
+entorno por defecto no cargaba nada y el fichero moría de otra forma mucho
+antes; con `Seaquest-v0` llega por fin al bucle y a la llamada de
+`render()`. Es exactamente la trampa de cambiar un valor por defecto: hay
+que recorrer todo lo que lo consume.
+
+Arreglado donde toca, que es al crear el entorno: `make_env()` (en tema3 y
+tema5) y los dos `gym.make()` de la rama no-Atari reciben
+`render_mode="human"` cuando se ha pedido `--render`, y `None` cuando no.
+Sin `--render`, el comportamiento es idéntico al de antes. Aplicado igual
+en `DeepQLearner.ipynb` y `a2c.ipynb`, para que el notebook y su `.py`
+gemelo no vuelvan a divergir.
 
 ## 9. Los identificadores de dos checkpoints de tema5 ya no existen
 
@@ -421,11 +480,12 @@ error de dimensiones si no fuera así. No reventó, y no hubo que forzar nada:
 
 Un apunte honesto sobre ese segundo agente: **`LunarLander` nunca estuvo
 resuelto**. Se considera resuelto por encima de +200 de recompensa media, y
-su mejor episodio registrado es -7,4. Es un agente a medio entrenar, y eso
-ya era así en 2019 — los números que verás al ejecutarlo son coherentes con
-eso, no con unos pesos rotos.
+su mejor episodio registrado es -7,4. Es un agente a medio entrenar, y ya
+lo era el día que se subió al repositorio (28 de noviembre de 2018) — los
+números que verás al ejecutarlo son coherentes con eso, no con unos pesos
+rotos.
 
-## 10. Un typo de 2018 que llevaba seis años siendo invisible
+## 10. Un typo de 2018 que llevaba casi ocho años siendo invisible
 
 En `tema5/function_aproximator/deep.py` (cuatro veces) y en `swallow.py`
 (una más) había esto:
@@ -435,10 +495,13 @@ x.require_grad_()      # el método no existe; es requires_grad_
 ```
 
 No es un cambio de PyTorch: **`require_grad_` no ha existido nunca**, en
-ninguna versión. Es un typo del propio repositorio desde 2018. Y lanzaba
-`AttributeError` en el primer paso de cada agente.
+ninguna versión. Es un typo del propio repositorio, y el `git log` le pone
+fecha exacta: entra el **28 de noviembre de 2018**, en el commit `43639f9`
+(«Fin del curso»). De ahí a esta revisión, agosto de 2026, van **siete años
+y nueve meses**. Y lanzaba `AttributeError` en el primer paso de cada
+agente.
 
-**¿Por qué no lo vio nadie en seis años?** Porque `a2c.py` lanza cada uno de
+**¿Por qué no lo vio nadie en casi ocho años?** Porque `a2c.py` lanza cada uno de
 sus agentes en un proceso hijo con `multiprocessing.Process`, y luego hace:
 
 ```python
@@ -452,7 +515,7 @@ proceso padre sale con **código 0**. Todo verde.
 Así que ni el alumno lo veía —el mensaje del hijo se pierde entre el ruido
 de la consola— ni ninguna herramienta automática podía verlo, porque todas
 las herramientas automáticas miran el código de salida. Un fichero que
-"funciona", durante seis años, sin haber entrenado jamás.
+"funciona", durante casi ocho años, sin haber entrenado jamás.
 
 **Arreglado** en las cinco apariciones. Verificado leyendo la salida real,
 no el código de retorno: antes, `a2c.py` moría en el primer
@@ -486,7 +549,13 @@ de borrarlo.
 
 ## 12. Los 9 notebooks solo funcionaban dentro de Google Colab
 
-Los nueve `.ipynb` del curso morían todos en la misma celda:
+Un apunte previo sobre las fechas, porque cambia de quién es la historia:
+**los nueve notebooks no son de 2019, son de septiembre de 2020.** Los
+añadió al repositorio el mismo contribuidor externo del punto 7, entre el 5
+y el 8 de septiembre de 2020 (de `34607a2` a `762d995`), adaptando a Colab
+un curso que hasta entonces solo tenía `.py`.
+
+Los nueve morían todos en la misma celda:
 
 ```
 ModuleNotFoundError: No module named 'google.colab'
@@ -510,11 +579,30 @@ aplicó en el curso hermano *Deep Learning de A a la Z*:
   if 'google.colab' in sys.modules:
       !git clone -b update-2026 https://github.com/joanby/ia-course.git
       %cd 'ia-course/temaN'
+      !pip install ale-py tensorboardX      # solo en los que hace falta
   ```
 
   En local es un no-op: no hace ninguna llamada de red y no cuesta nada. En
   Colab sigue clonando el repositorio y situándose en la carpeta correcta,
-  igual que antes. **Los notebooks funcionan en los dos sitios.**
+  igual que antes.
+
+  **El `!pip install` merece su párrafo, porque casi se queda fuera.** El
+  bloque de arranque original no solo clonaba: también instalaba paquetes.
+  Al colapsarlo, las instalaciones se fueron con él — y eso **ninguna
+  ejecución en local puede detectarlo**, porque en local esa rama del `if`
+  no se ejecuta jamás. De aquellos `!pip install` sobreviven los dos únicos
+  que Colab no trae de serie: `ale-py`, en `tema1/gym_step.ipynb`,
+  `tema1/spaces.ipynb`, `tema3/DeepQLearner.ipynb` y `tema5/a2c.ipynb`; y
+  `tensorboardX`, en esos dos últimos. Los demás —`gym` viejo, `atari_py`,
+  `torch`, `torchvision`, `numpy`, `piglet`, `pyvirtualdisplay`— o ya no
+  aplican, o los trae Colab.
+
+  Y aquí toca ser preciso con lo que se promete: **toda esta verificación se
+  ha hecho en local, en macOS. Nadie ha ejecutado nada en Colab.** Los
+  notebooks *deberían* funcionar allí —la celda hace lo mismo que hacía
+  antes, más las dos instalaciones que faltaban— pero no lo hemos visto, y
+  no vamos a decir que funciona algo que no hemos ejecutado. Es el mismo
+  criterio que se aplica a `a2c.ipynb` más abajo.
 
 - Las llamadas a `wrap_env(...)` (del bloque de utilidades borrado) se
   sustituyen por la creación directa del entorno, `gym.make(...)`, igual que
@@ -533,7 +621,7 @@ aplicó en el curso hermano *Deep Learning de A a la Z*:
 
 - Y reciben, donde toca, los mismos arreglos que sus `.py` gemelos: el
   contrato de `step()`/`reset()`, `Monitor` → `RecordVideo`, los valores por
-  defecto de `--env`, y `weights_only=False`.
+  defecto de `--env`, `weights_only=False` y el `render_mode` del punto 8.
 
 **Un hallazgo de propina, y del tipo que solo aparece al ejecutar.**
 `tema2/mountain_car_qlearner.ipynb` usa `np.zeros`, `np.argmax` y
@@ -543,6 +631,46 @@ primer intento de verificación murió con `NameError: name 'np' is not
 defined` en la línea que construye la tabla Q. Nada que ver con `gym`: un
 import huérfano que quedó al descubierto al quitar el código muerto.
 Arreglado, y revisado el mismo riesgo en los otros ocho.
+
+## 13. La plantilla de `tema4` seguía enseñando el contrato de `step()` que ya no existe
+
+**Afecta a:** `tema4/environments/__init__.py` y
+`tema4/environments/custom_environment_template.py` — los dos únicos
+ficheros de `tema4`, el tema en el que construyes tu **propio** entorno.
+
+Los dos se migraron con todo lo demás: `import gym` pasó a
+`import gymnasium as gym`, y `from gym.envs.registration import register` a
+`from gymnasium.envs.registration import register`. Los dos se ejecutan sin
+error, y salieron verdes en una décima de segundo.
+
+**Y ese es justamente el problema: se ejecutan sin error porque no hacen
+nada.** `custom_environment_template.py` define una clase y no la instancia
+nunca; el verificador comprobó que el fichero se puede importar, que no es
+lo mismo que comprobar que es correcto.
+
+Lo que había dentro sin que nadie lo mirara era esto:
+
+- El docstring de `step()` documentaba `: return : (observation, reward,
+  done, info)` — los cuatro valores de la API vieja.
+- El comentario que cierra el método decía
+  `# return(observation, reward, done, info)`.
+- El docstring de `reset()` documentaba `: return : observation`, un solo
+  valor.
+- `metadata` usaba la clave `'render.modes'`, que `gymnasium` ya no lee
+  (hoy es `'render_modes'`).
+
+Eso pesa más aquí que en cualquier otro fichero del curso, porque **este es
+el único fichero cuyo trabajo es enseñarte el contrato.** Es la plantilla de
+la que partes para escribir tu entorno: si copias su `step()`, escribes un
+entorno que `gymnasium` no sabe usar, y el error te llegará mucho después y
+desde otro sitio.
+
+**Qué se hace ahora.** Los docstrings documentan el contrato de hoy:
+`step()` devuelve `(observation, reward, terminated, truncated, info)` —con
+la explicación de qué distingue a uno del otro, que es la del punto 1— y
+`reset(seed, options)` devuelve `(observation, info)`. `metadata` pasa a
+`'render_modes'`. El cuerpo no se toca: sigue siendo una plantilla de
+rellenar, con sus `# Implementar ... aquí`.
 
 ---
 
@@ -564,7 +692,7 @@ vez que lo clonas:
 - **`tema1/gym-master/` — 210 ficheros, 4,1 MB.** Una copia de la librería
   `gym` 0.10.5, descomprimida dentro del repositorio. Ningún import del
   curso la usaba: no está en el `sys.path` de nadie, y un `grep` sobre los
-  37 ficheros del curso no la menciona ni una vez. Con el curso ya migrado a
+  37 ficheros que el curso tiene en `master` no la menciona ni una vez. Con el curso ya migrado a
   `gymnasium`, tener dentro una copia de la librería vieja solo podía
   inducir a error.
 
@@ -609,9 +737,45 @@ y con otras consecuencias.
   fijar el modo por ti los rompería para la mitad de los casos. Si quieres
   ver la ventana, pásale `render_mode="human"` tú al `gym.make()`.
 
+- **Tres ficheros llaman a `.render()` y no abren ninguna ventana**, y es
+  esperable: `tema2/mountain_car_rand.py`, `tema1/gym_install_test.py` y
+  `tema1/All_environment_test_colab.ipynb` crean el entorno con el nombre
+  escrito a mano y sin `render_mode`. En `gymnasium` eso ya no abre nada,
+  solo imprime un aviso por consola. No se les ha puesto el modo a
+  propósito: `render_mode="human"` los convertiría en ejecuciones en tiempo
+  real de 1.000 y 2.000 pasos, que es justamente lo que impide verificar
+  `gym_step.py` de forma automática.
+
+- **`import ale_py` es una línea nueva** en `tema1/gym_step.py`,
+  `tema1/spaces.py`, `tema1/run_gym_environment.py` y en los dos
+  `environments/atari.py`. No está en el vídeo, y hoy hace falta: sin
+  importarlo (y sin `gym.register_envs(ale_py)` donde corresponde),
+  `gym.make("Qbert-v0")` no encuentra los juegos de Atari.
+
+- **Los espacios se imprimen con más detalle.** Donde el vídeo enseña
+  `Box(4,)` para el espacio de estados de `CartPole-v0`, `spaces.py`
+  imprime hoy
+  `Box([-4.8 -inf -0.41887903 -inf], [4.8 inf 0.41887903 inf], (4,), float32)`.
+  Es el mismo espacio: lo que cambió `gymnasium` es el `repr`, que ahora
+  muestra también las cotas y el tipo.
+
+- **`Seaquest-v0` avisa de que está anticuado.** Ejecutar `DeepQLearner.py`
+  a secas imprime `DeprecationWarning: WARN: The environment Seaquest-v0 is
+  out of date. You should consider upgrading to version v4`. Es un aviso, no
+  un error, y se ha dejado así: `Seaquest-v0` es el identificador que
+  corresponde al checkpoint que trae el curso (punto 8).
+
+- **En `tema2/monitor_output/` hay vídeos que no has grabado tú.** Los diez
+  `openaigym.video.0.1937.*.mp4` son de una ejecución de 2018 que se
+  commiteó al repositorio; siguen ahí por no tocar lo que se ve en el vídeo.
+  Cuando ejecutes `mountain_car_qlearner.py`, el `RecordVideo` de hoy
+  escribirá los suyos al lado, con otro nombre
+  (`rl-video-episode-N.mp4`). Los tuyos son esos.
+
 - **Los notebooks.** Su primera celda ya no es un `git clone` a pelo, sino
   el bloque condicionado del punto 12, y han perdido las utilidades de vídeo
-  de Colab. Funcionan igual en Colab que antes y ahora también en local.
+  de Colab. En local funcionan; en Colab deberían seguir funcionando, pero
+  no se ha comprobado.
 
 - **`a2c.py` avisa de `NaN or Inf found in input tensor`** si lo dejas
   entrenar sobre un checkpoint ya cargado. Se explica justo abajo.
@@ -622,6 +786,13 @@ y con otras consecuencias.
 
 Esta es la sección que más te conviene leer, porque es donde este documento
 deja de prometer.
+
+**Nada se ha ejecutado en Google Colab.** Toda la verificación de esta rama
+—los 36 ficheros, los 9 notebooks incluidos— se ha hecho en local, en macOS
+con Apple Silicon. La celda de arranque condicionada del punto 12 hace en
+Colab lo que hacía antes, más las dos instalaciones que se habían perdido,
+así que **debería** funcionar allí; pero no lo hemos visto, y este documento
+no dice que funcione algo que no ha ejecutado.
 
 **`tema5/a2c.ipynb` no se ha podido ejecutar, y no se ha arreglado.** El
 notebook define `DeepActorCriticAgent`, una subclase de
@@ -641,9 +812,10 @@ Tres cosas, en orden de importancia:
    `gym`.** Es una limitación estructural de `multiprocessing` con clases
    definidas de forma interactiva, y se reprodujo con una clase de prueba de
    dos líneas sin nada de aprendizaje por refuerzo de por medio. El commit
-   que añadió este notebook al repositorio, en 2018, se titula literalmente
-   *"a2c colab, tensorboard not working"*: nunca hubo una versión de este
-   fichero sin este problema.
+   que añadió este notebook al repositorio (`762d995`, del **8 de
+   septiembre de 2020**, no de 2018) se titula literalmente *"a2c colab,
+   tensorboard not working"*: nunca hubo una versión de este fichero sin
+   este problema.
 
 2. **En Linux y en Colab, que es donde este notebook está pensado para
    correr, debería funcionar** — ahí `multiprocessing` arranca de otra
@@ -662,7 +834,7 @@ mirar el `exitcode`— **termina con código 0** aunque el hijo no haya
 entrenado nada. Se cuenta aquí para que no lo confundas con una ejecución
 correcta.
 
-**Los entrenamientos largos se han verificado con una versión reducida.**
+**Tres entrenamientos largos se han verificado con una versión reducida.**
 Igual que en los cursos hermanos, hay ficheros cuyo entrenamiento completo
 se mide en horas o días y no es viable ejecutar en una revisión:
 
@@ -673,16 +845,22 @@ se mide en horas o días y no es viable ejecutar en una revisión:
 | `tema1/gym_step.py` | 10 × 500 pasos con ventana en tiempo real | copia reducida de 1 episodio y 20 pasos |
 | `tema5/a2c.py` | 25 episodios sobre el checkpoint cargado | ejecutado, pero sobre una **copia** fuera del repo, para no arriesgar el checkpoint que se distribuye |
 
+Ojo al matiz de la última fila, porque no es igual que las otras tres:
+**`a2c.py` no se redujo.** Se ejecutó con sus 25 episodios por defecto, que
+es su valor real; lo único que se hizo aparte fue lanzarlo sobre una copia
+del tema fuera del repositorio, para que un guardado accidental no tocara el
+checkpoint que se distribuye.
+
 Dicho sin maquillar: **sabemos que el código corre de principio a fin; no
-hemos comprobado que un entrenamiento completo reproduzca los números del
-vídeo.** Los cuatro sí se han ejecutado lo suficiente como para ver
-recompensas reales y la carga del modelo correcto.
+hemos comprobado que un entrenamiento completo de los tres primeros
+reproduzca los números del vídeo.** Los cuatro sí se han ejecutado lo
+suficiente como para ver recompensas reales y la carga del modelo correcto.
 
 Sí se ejecutaron **completos**, sin reducir nada:
-`tema2/mountain_car_rand.py` (1.000 episodios, 1,9 segundos) y
+`tema2/mountain_car_rand.py` (1.000 episodios, unos 2 segundos) y
 `tema2/mountain_car_qlearner.py` (50.000 episodios de entrenamiento, 1.000
-de prueba y la grabación real de vídeo, 152 segundos, ejecutado tres veces
-con el mismo resultado).
+de prueba y la grabación real de vídeo, unos dos minutos, ejecutado varias
+veces con el mismo resultado).
 
 **`tema1/run_gym_environment.py` y `tema1/spaces.py`** reciben el entorno
 por línea de comandos, así que ninguna herramienta automática puede
@@ -693,7 +871,7 @@ con `MountainCar-v0`, `CartPole-v0` y `Qbert-v0`.
 
 # Lo que sigue sin arreglar
 
-Dos cosas, las dos conocidas y ninguna de las dos bloqueante:
+Cuatro cosas, todas conocidas y ninguna bloqueante:
 
 - **La inestabilidad numérica de `a2c.py`.** Si lo dejas entrenar sobre un
   checkpoint ya cargado (que es el comportamiento por defecto), `tensorboardX`
@@ -714,6 +892,27 @@ Dos cosas, las dos conocidas y ninguna de las dos bloqueante:
   (`run_gym_environment.py`, `spaces.py`), por el motivo explicado en "lo
   que puede verse distinto al vídeo": no se decide por ti qué tipo de
   entorno vas a pasarles.
+
+- **`gym.spaces.Box(4)` en la plantilla de `tema4`.** En
+  `custom_environment_template.py`, la línea que define el espacio de
+  acciones es `self.action_space = gym.spaces.Box(4)`. Eso no es válido —ni
+  hoy ni en 2018: `Box` pide `low` y `high`, o `low`, `high` y `shape`—, y
+  nunca dio error porque esa clase no se instancia en ninguna parte. No se
+  ha tocado porque es la línea que tú vas a reemplazar de todas formas: la
+  plantilla existe para que pongas ahí el espacio de acciones **de tu**
+  entorno. Pero si la copias tal cual, revienta. La receta, según lo que
+  necesites: `gym.spaces.Discrete(4)` para cuatro acciones discretas, o
+  `gym.spaces.Box(low=-1.0, high=1.0, shape=(4,))` para cuatro continuas.
+
+- **`parameters.json` en la raíz del repositorio** es un duplicado byte a
+  byte de `tema3/parameters.json`, y ningún fichero del curso lo lee: el
+  `--params-file` de `DeepQLearner.py` vale `parameters.json` **relativo al
+  directorio desde el que lanzas el comando**, que es `tema3/`. Es el mismo
+  patrón que el `params_manager_colab.py` del punto 11 —un segundo fichero
+  idéntico esperando a que alguien toque uno y se olvide del otro— pero se
+  ha dejado donde está, porque retirarlo de la raíz es un cambio que se ve
+  al clonar y esta rama no toca la estructura del repositorio. Si editas
+  parámetros, edita el de `tema3/`.
 
 ---
 

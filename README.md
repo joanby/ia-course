@@ -8,7 +8,8 @@
 
 Esta es la versión del código **puesta al día y verificada en agosto de
 2026**, con Python 3.13 y las librerías tal como están hoy. El curso se grabó
-en **2019**, sobre `gym` — la librería de OpenAI para entornos de aprendizaje
+en **2018-2019** —su código entra en el repositorio entre septiembre y
+noviembre de 2018—, sobre `gym` — la librería de OpenAI para entornos de aprendizaje
 por refuerzo — y `gym` lleva sin mantenimiento desde 2022. Aquí el código
 vuelve a ejecutarse de principio a fin.
 
@@ -25,15 +26,24 @@ vuelve a ejecutarse de principio a fin.
   `SeaquestNoFrameskip-v4`…) **no cambian de nombre**: lo que cambia es cómo
   se desempaqueta lo que devuelven `reset()` y `step()`.
 - **Los dos agentes ya entrenados de `tema3` ahora se cargan de verdad.** En
-  `master` nunca llegaban a cargarse — el fichero de configuración apuntaba a
-  un Google Drive de 2019 — así que ejecutar la clase arrancaba un
+  `master` no llegan a cargarse: el fichero de configuración apunta a una
+  carpeta de Google Drive de una sesión de Colab de **septiembre de 2020**,
+  escrita por un contribuidor externo en un *pull request* (antes de eso, en
+  2018, la ruta era correcta). Así que ejecutar la clase arranca un
   entrenamiento desde cero de horas sin decir por qué. Está contado con
-  detalle en `CAMBIOS-2026.md`.
-- **Los 9 notebooks están aquí y funcionan en local y en Google Colab.** En
+  detalle, con las fechas y los commits, en `CAMBIOS-2026.md`.
+- **Los 9 notebooks están aquí, y 8 de los 9 se ejecutan en local.** En
   `master` solo funcionaban dentro de Colab: montaban Google Drive y se
   clonaban el repositorio a sí mismos. Ahora todo ese arranque vive en una
-  única celda condicionada, que en Colab hace lo de siempre y en local no
-  hace nada.
+  única celda condicionada, que en Colab hace lo de siempre —clonar,
+  situarse en la carpeta e instalar lo que Colab no trae— y en local no hace
+  nada. La excepción es `tema5/a2c.ipynb`, que se explica más abajo.
+- **La plantilla de `tema4` ya enseña el contrato de `gymnasium`.**
+  `custom_environment_template.py` es el fichero del que partes para
+  escribir tu propio entorno, y sus docstrings seguían documentando el
+  `step()` de cuatro valores que ya no existe. Ahora documentan
+  `(observation, reward, terminated, truncated, info)` y un `reset()` que
+  devuelve `(observation, info)`.
 - **Esta rama no trae `tema1/gym-master/` ni `tema3/logs/`**: una copia
   vendorizada de `gym` 0.10.5 que ningún fichero del curso importaba, y 110 MB
   de registros de TensorBoard de una sesión de entrenamiento de octubre de
@@ -58,9 +68,11 @@ conda activate iacourse
 ```
 
 Eso te deja Python 3.13 con numpy, matplotlib, OpenCV, PyTorch y Jupyter,
-más `gymnasium` (con Box2D y *classic control*), `ale-py` para los juegos de
-Atari, `moviepy` y `pygame-ce` para grabar los vídeos de los agentes, y
-`tensorboard`/`tensorboardX` para ver las curvas de entrenamiento.
+más `gymnasium` con sus extras `[box2d,classic-control]`, `ale-py` para los
+juegos de Atari, `moviepy` para grabar los vídeos de los agentes, y
+`tensorboard`/`tensorboardX` para ver las curvas de entrenamiento. Box2D y
+`pygame-ce` no aparecen como líneas propias del `.yml`: llegan por esos dos
+extras de `gymnasium`.
 
 Dos cosas que antes daban guerra y ahora no: **las ROMs de Atari vienen
 incluidas en `ale-py`** (no hay que ejecutar `AutoROM` ni aceptar ninguna
@@ -74,18 +86,25 @@ tabla de
 
 ## 📓 Los notebooks
 
-Cada tema trae sus `.ipynb` al lado de los `.py`, y **funcionan en los dos
-sitios**:
+Cada tema trae sus `.ipynb` al lado de los `.py`:
 
 - **En local**, con el entorno de arriba: `jupyter notebook` desde la carpeta
-  del tema y a correr.
+  del tema y a correr. **Verificados 8 de los 9** — la excepción está justo
+  aquí abajo.
 - **En Google Colab**, igual que siempre: la primera celda detecta que está
-  en Colab, se clona esta rama y se sitúa en la carpeta del tema.
+  en Colab, se clona esta rama, se sitúa en la carpeta del tema e instala lo
+  que Colab no trae de serie (`ale-py` y `tensorboardX`, donde hacen falta).
 
-Una excepción honesta: **`tema5/a2c.ipynb` no se ha podido verificar en
-macOS**, por un motivo que no tiene nada que ver con esta actualización y que
-se explica en `CAMBIOS-2026.md`. En Linux y en Colab debería funcionar, pero
-no lo hemos comprobado. Su gemelo `tema5/a2c.py` sí está verificado.
+Y ahora la parte honesta, que son dos:
+
+- **Nada de esto se ha ejecutado en Colab.** Toda la verificación se ha
+  hecho en local, en macOS. Los notebooks *deberían* funcionar en Colab,
+  porque la celda de arranque hace allí lo mismo que hacía antes más las
+  instalaciones que faltaban, pero no lo hemos comprobado y no vamos a decir
+  que funciona algo que no hemos visto funcionar.
+- **`tema5/a2c.ipynb` no se ha podido verificar ni siquiera en local**, por
+  un motivo que no tiene nada que ver con esta actualización y que se explica
+  en `CAMBIOS-2026.md`. Su gemelo `tema5/a2c.py` sí está verificado.
 
 ---
 
