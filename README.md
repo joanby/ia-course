@@ -42,8 +42,9 @@ vuelve a ejecutarse de principio a fin.
   `custom_environment_template.py` es el fichero del que partes para
   escribir tu propio entorno, y sus docstrings seguían documentando el
   `step()` de cuatro valores que ya no existe. Ahora documentan
-  `(observation, reward, terminated, truncated, info)` y un `reset()` que
-  devuelve `(observation, info)`.
+  `(observation, reward, terminated, truncated, info)`, un `reset()` que
+  devuelve `(observation, info)` y un `render()` sin parámetros, que es como
+  lo pide `gymnasium`.
 - **Esta rama no trae `tema1/gym-master/` ni `tema3/logs/`**: una copia
   vendorizada de `gym` 0.10.5 que ningún fichero del curso importaba, y 110 MB
   de registros de TensorBoard de una sesión de entrenamiento de octubre de
@@ -93,7 +94,8 @@ Cada tema trae sus `.ipynb` al lado de los `.py`:
   aquí abajo.
 - **En Google Colab**, igual que siempre: la primera celda detecta que está
   en Colab, se clona esta rama, se sitúa en la carpeta del tema e instala lo
-  que Colab no trae de serie (`ale-py` y `tensorboardX`, donde hacen falta).
+  que Colab no trae de serie: `gymnasium` en los nueve (nadie más lo
+  arrastra), más `ale-py`, `tensorboardX` o `moviepy` en los que los usan.
 
 Y ahora la parte honesta, que son dos:
 

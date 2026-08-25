@@ -65,9 +65,13 @@ class CustomEnvironment(gym.Env):
         # Implementar el método reset aquí
         # return observation, info 
         
-    def render(self, mode = 'human', close = False):
+    def render(self):
         """
-        : param mode:
-        : return :
+        Dibuja el estado actual del entorno.
+        En gymnasium el modo no se pasa aquí: se fija al crear el entorno
+        (gym.make(..., render_mode="human")) y se lee en self.render_mode,
+        que tiene que ser uno de los de metadata['render_modes'].
+        : return : lo que corresponda al modo (None para "human", un array
+                   de píxeles para "rgb_array")
         """
         return

@@ -587,26 +587,57 @@ aplicó en el curso hermano *Deep Learning de A a la Z*:
   if 'google.colab' in sys.modules:
       !git clone -b update-2026 https://github.com/joanby/ia-course.git
       %cd 'ia-course/temaN'
-      !pip install ale-py tensorboardX      # solo en los que hace falta
+      !pip install "gymnasium[classic-control]" ale-py tensorboardX
   ```
 
   En local es un no-op: no hace ninguna llamada de red y no cuesta nada. En
   Colab sigue clonando el repositorio y situándose en la carpeta correcta,
   igual que antes.
 
-  **El `!pip install` merece su párrafo, porque casi se queda fuera.** El
-  bloque de arranque original no solo clonaba: también instalaba paquetes.
-  Al colapsarlo, las instalaciones se fueron con él — y eso **ninguna
+  **El `!pip install` merece su párrafo, porque casi se queda fuera dos
+  veces.** El bloque de arranque original no solo clonaba: también
+  instalaba paquetes, y entre ellos **la propia librería de entornos**
+  (`!pip install gym pyvirtualdisplay`, `!pip install 'gym[box2d]'`). Al
+  colapsarlo, las instalaciones se fueron con él — y eso **ninguna
   ejecución en local puede detectarlo**, porque en local esa rama del `if`
-  no se ejecuta jamás. De aquellos `!pip install` sobreviven los dos únicos
-  que Colab no trae de serie: `ale-py`, en `tema1/gym_step.ipynb`,
-  `tema1/spaces.ipynb`, `tema3/DeepQLearner.ipynb` y `tema5/a2c.ipynb`; y
-  `tensorboardX`, en esos dos últimos. Los demás —`gym` viejo, `atari_py`,
-  `torch`, `torchvision`, `numpy`, `piglet`, `pyvirtualdisplay`— o ya no
-  aplican, o los trae Colab.
+  no se ejecuta jamás.
+
+  Lo que se instala ahora, notebook a notebook, no por deducción sino
+  midiendo qué falla con cada paquete fuera:
+
+  | Notebook | `!pip install` |
+  |---|---|
+  | `tema1/All_environment_test_colab.ipynb` | `"gymnasium[classic-control]"` |
+  | `tema1/gym_step.ipynb` | `"gymnasium[classic-control]" ale-py` |
+  | `tema1/spaces.ipynb` | `"gymnasium[classic-control]" ale-py` |
+  | `tema2/mountain_car_qlearner.ipynb` | `"gymnasium[classic-control]" moviepy` |
+  | `tema2/mountain_car_rand.ipynb` | `"gymnasium[classic-control]"` |
+  | `tema2/spaces.ipynb` | `"gymnasium[classic-control]"` |
+  | `tema3/DeepQLearner.ipynb` | `"gymnasium[classic-control]" ale-py tensorboardX` |
+  | `tema3/SwallowQLearner.ipynb` | `"gymnasium[classic-control]"` |
+  | `tema5/a2c.ipynb` | `"gymnasium[classic-control]" ale-py tensorboardX` |
+
+  `gymnasium` va en los nueve porque los nueve hacen
+  `import gymnasium as gym`, y **no lo arrastra nadie**: comprobado que
+  `ale-py` solo depende de `numpy` y `tensorboardX` de `numpy`, `packaging`
+  y `protobuf`. El extra `[classic-control]` aporta `pygame-ce`, y
+  `moviepy` va solo en `mountain_car_qlearner.ipynb`, que es el único que
+  graba vídeo: en un entorno con `gymnasium` pelado, crear
+  `MountainCar-v0` con `render_mode="rgb_array"` falla con
+  `DependencyNotInstalled: pygame is not installed` y cerrar el
+  `RecordVideo` falla con `moviepy is not installed`. Los dos son
+  exactamente lo que aportaba el viejo `gym[box2d]`.
+
+  Lo que **no** se restaura: `gym` viejo y `atari_py`, porque son los
+  paquetes que esta actualización sustituye; y `torch`, `torchvision`,
+  `numpy`, `opencv`, `tqdm`, `piglet` y `pyvirtualdisplay`, que o los trae
+  Colab o pertenecen al bloque de utilidades de vídeo que se ha retirado.
 
   Y aquí toca ser preciso con lo que se promete: **toda esta verificación se
-  ha hecho en local, en macOS. Nadie ha ejecutado nada en Colab.** Los
+  ha hecho en local, en macOS. Nadie ha ejecutado nada en Colab.** Que cada
+  paquete de esa tabla hace falta sí está medido, en un entorno virtual
+  limpio; lo que no está comprobado es la lista de lo que Colab trae ya
+  puesto. Los
   notebooks *deberían* funcionar allí —la celda hace lo mismo que hacía
   antes, más las dos instalaciones que faltaban— pero no lo hemos visto, y
   no vamos a decir que funciona algo que no hemos ejecutado. Es el mismo
@@ -666,6 +697,12 @@ Lo que había dentro sin que nadie lo mirara era esto:
   valor.
 - `metadata` usaba la clave `'render.modes'`, que `gymnasium` ya no lee
   (hoy es `'render_modes'`).
+- Y `render()` tenía la firma vieja, `render(self, mode='human',
+  close=False)`. Hoy `gymnasium.Env.render` es `render(self)` a secas: el
+  modo se fija al crear el entorno y se lee en `self.render_mode`. Es
+  exactamente la idea que este documento repite en los puntos 4 y 8 y en
+  "lo que puede verse distinto", así que tenerla contradicha justo en la
+  plantilla era lo peor de los cuatro.
 
 Eso pesa más aquí que en cualquier otro fichero del curso, porque **este es
 el único fichero cuyo trabajo es enseñarte el contrato.** Es la plantilla de
@@ -677,8 +714,9 @@ desde otro sitio.
 `step()` devuelve `(observation, reward, terminated, truncated, info)` —con
 la explicación de qué distingue a uno del otro, que es la del punto 1— y
 `reset(seed, options)` devuelve `(observation, info)`. `metadata` pasa a
-`'render_modes'`. El cuerpo no se toca: sigue siendo una plantilla de
-rellenar, con sus `# Implementar ... aquí`.
+`'render_modes'`, y `render()` pierde los dos parámetros y explica en su
+docstring de dónde sale ahora el modo. El cuerpo no se toca: sigue siendo
+una plantilla de rellenar, con sus `# Implementar ... aquí`.
 
 ---
 
@@ -887,7 +925,7 @@ con `MountainCar-v0`, `CartPole-v0` y `Qbert-v0`.
 
 # Lo que sigue sin arreglar
 
-Cuatro cosas, todas conocidas y ninguna bloqueante:
+Cinco cosas, todas conocidas y ninguna bloqueante:
 
 - **La inestabilidad numérica de `a2c.py`.** Si lo dejas entrenar sobre un
   checkpoint ya cargado (que es el comportamiento por defecto), `tensorboardX`
@@ -919,6 +957,16 @@ Cuatro cosas, todas conocidas y ninguna bloqueante:
   entorno. Pero si la copias tal cual, revienta. La receta, según lo que
   necesites: `gym.spaces.Discrete(4)` para cuatro acciones discretas, o
   `gym.spaces.Box(low=-1.0, high=1.0, shape=(4,))` para cuatro continuas.
+
+- **El `entry_point` de `tema4/environments/__init__.py`.** El fichero
+  registra el entorno con `entry_point = ":CustomEnvironment"`, sin nada
+  delante de los dos puntos. `register()` no protesta al ejecutarse —por
+  eso el fichero también salía verde— pero `gym.make("CustomEnvironment-v0")`
+  muere con `ValueError: Empty module name`. Es el mismo caso que el
+  `Box(4)`: un hueco de plantilla que solo tú puedes rellenar, porque
+  delante de los dos puntos va **el módulo donde viva tu entorno**. Si es
+  `custom_environment_template.py`, la línea queda
+  `entry_point = "custom_environment_template:CustomEnvironment"`.
 
 - **`parameters.json` en la raíz del repositorio** es un duplicado byte a
   byte de `tema3/parameters.json`, y ningún fichero del curso lo lee: el
