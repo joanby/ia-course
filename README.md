@@ -1,5 +1,11 @@
 # [Curso completo de Inteligencia Artificial con Python](https://www.udemy.com/curso-completo-de-inteligencia-artificial/?couponCode=GITHUB_PROMO)
 
+> ### 🆕 ¿Vienes en 2026? El código actualizado está en la rama [`update-2026`](https://github.com/joanby/ia-course/tree/update-2026)
+>
+> Esta rama `master` conserva el código **tal y como se grabó el curso**. `gym`, la librería
+> con la que se grabó, lleva sin mantenimiento desde 2022; la rama `update-2026` tiene el mismo
+> código migrado a `gymnasium` y verificado, con [una explicación de todos los cambios](https://github.com/joanby/ia-course/blob/update-2026/CAMBIOS-2026.md).
+
 Bienvenido Curso completo de Inteligencia Artificial de cero a experto, donde aprenderás conceptos claves del mundo de la IAy el aprendizaje automatizado tanto desde el punto de visto teórico como implementaciones prácticas con Python, en particular cubriremos aspectos como
 
 * Introducción a la inteligencia artificial, con todos los conocimientos y terminología del sector.
