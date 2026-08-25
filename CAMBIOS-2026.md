@@ -704,6 +704,14 @@ vez que lo clonas:
   `gymnasium`, tener dentro una copia de la librería vieja solo podía
   inducir a error.
 
+**Y de paso se ha cerrado la puerta por la que entraron.** `logs/` no estaba
+en el `.gitignore`, así que en cuanto entrenas vuelve a aparecer como fichero
+nuevo y un `git add .` distraído lo mete otra vez — que es exactamente lo que
+pasó en 2018. Ahora el `.gitignore` de esta rama ignora `logs/` y los
+`rl-video-episode-*.mp4` que escribe `RecordVideo`: los dos destinos que el
+curso crea al ejecutarse. Quitar la basura sin cerrar el agujero no habría
+servido de nada.
+
 **Y ahora la parte honesta sobre lo que esto consigue.** Las dos siguen
 existiendo en la rama `master`, y sus objetos siguen en el histórico de git.
 Borrarlas en esta rama **alivia el disco que ocupa tu copia de trabajo

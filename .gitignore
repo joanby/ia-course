@@ -103,3 +103,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 .DS_Store
+
+# Destinos de escritura que crea el propio curso al ejecutarse
+# (logs/ es por donde se colaron los 110 MB de TensorBoard de 2018)
+logs/
+rl-video-episode-*.mp4
