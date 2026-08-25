@@ -1,0 +1,17 @@
+name: iacourse
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13
+  - numpy
+  - matplotlib
+  - opencv
+  - pytorch
+  - jupyter
+  - pip
+  - pip:
+      - gymnasium[box2d,classic-control]
+      - ale-py
+      - moviepy
+      - tensorboard
+      - tensorboardx
