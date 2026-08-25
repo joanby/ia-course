@@ -396,7 +396,15 @@ un fichero guardado con ese nombre:
 
 Con lo cual, incluso con la ruta correcta, **ejecutar el fichero a secas
 seguía sin cargar nada** y volvía a caer en el mismo `try/except` silencioso
-del punto anterior. Se ha cambiado el valor por defecto en los dos:
+del punto anterior.
+
+Y esta mitad es más vieja que la otra: ese `--env` por defecto está ahí desde
+el mismo commit de **octubre de 2018** en el que la ruta todavía era correcta.
+Sumando las dos, el resultado es que **`python DeepQLearner.py` a secas no ha
+cargado un checkpoint desde octubre de 2018** — casi ocho años, primero por el
+nombre del entorno y desde 2020 también por la ruta.
+
+Se ha cambiado el valor por defecto en los dos:
 
 - **`tema3/DeepQLearner.py` → `Seaquest-v0`.** Es el mismo juego que ya
   sugería el valor anterior, solo con el sufijo que de verdad corresponde al
