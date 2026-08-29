@@ -8,7 +8,7 @@ Created on Tue Oct 16 19:01:47 2018
 
 import torch
 
-class CNN(torch.nn.Module):
+class CNN(torch.nn.Module):  
     """
     Una red neuronal convolucional que tomará decisiones según los píxeles de la imagen
     """

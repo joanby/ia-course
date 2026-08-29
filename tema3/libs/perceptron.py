@@ -13,7 +13,7 @@ class SLP(torch.nn.Module):
     SLP significa Single Layer Perceptron o neurona de una sola capa para aproximar funciones
     """
     
-    def __init__(self, input_shape, output_shape, device = torch.device("cpu")):
+    def __init__(self, input_shape, output_shape, device):
         """
         :param input_shape: Tamaño o forma de los datos de entrada
         :param output_shape: Tamaño o forma de los datos de salida
@@ -23,9 +23,13 @@ class SLP(torch.nn.Module):
         self.device = device
         self.input_shape = input_shape[0]
         self.hidden_shape = 40
-        self.linear1 = torch.nn.Linear(self.input_shape, self.hidden_shape)
-        self.out = torch.nn.Linear(self.hidden_shape, output_shape)
         
+        if str(self.device) == 'cuda':
+            self.linear1 = torch.nn.Linear(self.input_shape, self.hidden_shape).cuda()
+            self.out = torch.nn.Linear(self.hidden_shape, output_shape).cuda()
+        else:
+            self.linear1 = torch.nn.Linear(self.input_shape, self.hidden_shape)
+            self.out = torch.nn.Linear(self.hidden_shape, output_shape)
         
     def forward(self, x):
         x = torch.from_numpy(x).float().to(self.device)
