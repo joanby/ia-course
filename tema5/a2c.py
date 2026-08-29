@@ -21,19 +21,25 @@ from function_aproximator.deep import DeepDiscreteActor
 from function_aproximator.deep import DeepCritic
 
 
-import gym
-import numpy as np
-from collections import namedtuple
-
-from datetime import datetime
 from argparse import ArgumentParser
+from collections import namedtuple
+from datetime import datetime
 
-
-from utils.params_manager import ParamsManager
+import gymnasium as gym
+import numpy as np
+from tensorboardX import SummaryWriter
 
 import environments.atari as Atari
+from utils.params_manager import ParamsManager
 
-from tensorboardX import SummaryWriter
+# Registramos los entornos ALE/* (Atari) en el namespace de Gymnasium si
+# ale-py está instalado.
+try:
+    import ale_py
+
+    gym.register_envs(ale_py)
+except ImportError:
+    pass
 
 ## Parseador de Argumentos
 args = ArgumentParser("DeepActorCriticAgent")
@@ -303,14 +309,20 @@ class DeepActorCriticAgent(mp.Process):
                 
         if atari_env:
             self.env = Atari.make_env(self.env_name, self.env_conf)
-        else: 
-            self.env = gym.make(self.env_name)
+        else:
+            # Si vamos a renderizar con --render usamos render_mode="human";
+            # si solo queremos grabar/inspeccionar frames, "rgb_array".
+            render_mode = "human" if args.render else "rgb_array"
+            self.env = gym.make(self.env_name, render_mode=render_mode)
         
         
         ## Configurar la política y parámetros del actor y del crítico
         self.state_shape = self.env.observation_space.shape
         
-        if isinstance(self.env.action_space.sample(), int): # Espacio de acciones Discreto
+        # En Gymnasium, ``action_space.sample()`` para Discrete devuelve un
+        # numpy scalar (np.int64), no un int de Python. Comprobamos por
+        # tipo de espacio en lugar de por la muestra.
+        if isinstance(self.env.action_space, gym.spaces.Discrete):
             self.action_shape = self.env.action_space.n
             self.policy = self.discrete_policy
             self.continuous_action_space = False
@@ -355,13 +367,14 @@ class DeepActorCriticAgent(mp.Process):
                     print("WARNING: no hay ningun modelo para este entorno. Pulsa cualquier tecla para volver a empezar...")
                     
         for episode in range(self.params["max_num_episodes"]):
-            obs = self.env.reset()
-            done = False
+            obs, info = self.env.reset()
+            terminated, truncated, done = False, False, False
             ep_reward = 0.0
             step_num = 0
             while not done:
                 action = self.get_action(obs)
-                next_obs, reward, done, _ = self.env.step(action)
+                next_obs, reward, terminated, truncated, _ = self.env.step(action)
+                done = terminated or truncated
                 self.rewards.append(reward)
                 ep_reward += reward
                 step_num += 1
